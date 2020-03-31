@@ -1,11 +1,9 @@
 package filehelper
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 
 	csvmap "github.com/recursionpharma/go-csv-map"
@@ -14,7 +12,7 @@ import (
 )
 
 // ParserFunc is to parse a []byte into an interface{}
-type ParserFunc func([]byte) (interface{}, error)
+type ParserFunc func(io.Reader) (interface{}, error)
 
 // Parser is the main type
 type Parser struct {
@@ -25,14 +23,14 @@ type Parser struct {
 func NewParser() *Parser {
 	return &Parser{
 		parsers: map[string]ParserFunc{
-			"xml": func(content []byte) (interface{}, error) {
-				return mxj.NewMapXml(content)
+			"xml": func(content io.Reader) (interface{}, error) {
+				return mxj.NewMapXmlReader(content)
 			},
-			"json": func(content []byte) (interface{}, error) {
-				return mxj.NewMapJson(content)
+			"json": func(content io.Reader) (interface{}, error) {
+				return mxj.NewMapJsonReader(content)
 			},
-			"csv": func(content []byte) (interface{}, error) {
-				r := csvmap.NewReader(bytes.NewBuffer(content))
+			"csv": func(content io.Reader) (interface{}, error) {
+				r := csvmap.NewReader(content)
 				r.Reader.LazyQuotes = true
 				var err error
 				r.Columns, err = r.ReadHeader()
@@ -63,11 +61,10 @@ func (l *Parser) ReadStruct(filename, format string) (interface{}, error) {
 
 // ParseStruct parses byte slice into map or slice
 func (l *Parser) ParseStruct(content io.Reader, format string) (interface{}, error) {
-	byteValue, _ := ioutil.ReadAll(content)
 	var out interface{}
 	var err error
 	if parser, ok := l.parsers[format]; ok {
-		out, err = parser(byteValue)
+		out, err = parser(content)
 	} else {
 		return nil, errors.New("Unknown file")
 	}

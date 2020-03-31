@@ -13,6 +13,16 @@ type testTemplateStruct struct {
 
 func TestTemplate(t *testing.T) {
 	tests := map[string]testTemplateStruct{
+		"isset": testTemplateStruct{
+			Template: `{{if isset .A "z"}}OK{{end}}`,
+			Values:   map[string]interface{}{"A": map[string]interface{}{"z": 1, "p": "a & b"}},
+			Result: "OK",
+		},
+		"not_isset": testTemplateStruct{
+			Template: `{{if isset .A "c"}}OK{{end}}`,
+			Values:   map[string]interface{}{"A": map[string]interface{}{"z": 1, "p": "a & b"}},
+			Result: "",
+		},
 		"xml_array": testTemplateStruct{
 			Template: `{{xml_array .A "products" "product"}}`,
 			Values:   map[string]interface{}{"A": []interface{}{map[string]interface{}{"z": 1, "p": "a & b"}, map[string]interface{}{"z": 2, "p": "b"}}},

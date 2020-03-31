@@ -83,6 +83,7 @@ var fmap = template.FuncMap{
 	"urldecode":       urldecode,
 	"md5":             md5hash,
 	"json_escape":     JsonEscape,
+	"isset":           isSet,
 }
 
 var fs afero.Fs
@@ -909,4 +910,28 @@ func pathValue(keys []string, s interface{}, f string) (v interface{}) {
 		}
 	}
 	return pathValue(nextkeys, v, "")
+}
+
+func isSet(a interface{}, key interface{}) bool {
+	av := reflect.ValueOf(a)
+	kv := reflect.ValueOf(key)
+
+	switch av.Kind() {
+	case reflect.Array, reflect.Chan, reflect.Slice:
+		k, err := cast.ToIntE(key)
+		if err != nil {
+			return false
+		}
+		if av.Len() > k {
+			return true
+		}
+	case reflect.Map:
+		if kv.Type() == av.Type().Key() {
+			return av.MapIndex(kv).IsValid()
+		}
+	default:
+		return false
+	}
+
+	return false
 }

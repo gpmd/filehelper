@@ -1,9 +1,10 @@
 package filehelper
 
 import (
-	"bytes"
 	"encoding/csv"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"reflect"
 	"strings"
 	"testing"
@@ -40,8 +41,8 @@ func TestParseStruct(t *testing.T) {
 			Format: "_",
 			Result: [][]string{[]string{"A", "B"}, []string{"C", "D"}},
 			Reg: map[string]ParserFunc{
-				"_": func(content []byte) (interface{}, error) {
-					r := csv.NewReader(bytes.NewBuffer(content))
+				"_": func(content io.Reader) (interface{}, error) {
+					r := csv.NewReader(content)
 					r.Comma = '_'
 					r.Comment = '#'
 					return r.ReadAll()
@@ -62,7 +63,11 @@ func TestParseStruct(t *testing.T) {
 			Reg: map[string]ParserFunc{
 				"bfk": func(content io.Reader) (interface{}, error) {
 					ret := map[string]interface{}{}
-					lines := strings.Split(string(content), "\n")
+					b, err := ioutil.ReadAll(content)
+					if err != nil {
+						return nil, err
+					}
+					lines := strings.Split(string(b), "\n")
 					for _, line := range lines {
 						items := strings.Split(strings.Trim(line, "\r"), "_")
 						if items[0] == "" {
@@ -101,9 +106,13 @@ func TestParseStruct(t *testing.T) {
 			Format: "bfk",
 			Result: map[string]interface{}{"ordn": "20023", "orln": [][]string{[]string{"115", "73", "1"}}, "$$$$": interface{}(nil), "##fn": "2018042711432473", "type": []string{"order", "ack"}},
 			Reg: map[string]ParserFunc{
-				"bfk": func(content []byte) (interface{}, error) {
+				"bfk": func(content io.Reader) (interface{}, error) {
 					ret := map[string]interface{}{}
-					lines := strings.Split(string(content), "\n")
+					b, err := ioutil.ReadAll(content)
+					if err != nil {
+						return nil, err
+					}
+					lines := strings.Split(string(b), "\n")
 					forceslice := []string{"orln"}
 					for _, line := range lines {
 						items := strings.Split(strings.Trim(line, "\r"), "_")
@@ -157,7 +166,7 @@ func TestParseStruct(t *testing.T) {
 				l.RegisterParser(name, parser)
 			}
 		}
-		res, err := l.ParseStruct([]byte(test.Input), test.Format)
+		res, err := l.ParseStruct(strings.NewReader(test.Input), test.Format)
 		if err != nil {
 			panic(err)
 		}
