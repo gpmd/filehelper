@@ -7,9 +7,9 @@ import (
 	"strings"
 )
 
-// sqlEscape_ uses Reflect to detect and handle each different type
+// sqlEscapeType uses Reflect to detect and handle each different type
 // and escape it accordingly
-func sqlEscape_(value reflect.Value) string {
+func sqlEscapeType(value reflect.Value) string {
 	sqlTypes := map[reflect.Kind]string {
 		reflect.String: "VARCHAR",
 		reflect.Int: "BIGINT",
@@ -24,7 +24,7 @@ func sqlEscape_(value reflect.Value) string {
 	case reflect.Slice:
 		vals := make([]string, 0, value.Len())
 		for i := 0; i < value.Len(); i++ {
-			vals = append(vals, sqlEscape_(value.Index(i)))
+			vals = append(vals, sqlEscapeType(value.Index(i)))
 		}
 		elemtype := "ARRAY"
 		if sqlType, ok := sqlTypes[value.Type().Elem().Kind()]; ok {
@@ -40,7 +40,7 @@ func sqlEscape_(value reflect.Value) string {
 	case reflect.Struct:
 		vals := make([]string, 0, value.NumField())
 		for i := 0; i < value.NumField(); i++ {
-			vals = append(vals, sqlEscape_(value.Field(i)))
+			vals = append(vals, sqlEscapeType(value.Field(i)))
 		}
 		escaped = strings.Join(vals, ", ")
 	default:

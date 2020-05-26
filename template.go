@@ -249,7 +249,7 @@ func escape(str string) string {
 
 func sqlEscape(q interface{}) string {
 	value := reflect.ValueOf(q)
-	return sqlEscape_(value)
+	return sqlEscapeType(value)
 }
 
 func dateFmt(format, datestring string) string {
