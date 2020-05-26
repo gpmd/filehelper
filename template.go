@@ -77,7 +77,7 @@ var fmap = template.FuncMap{
 	"createMap":       createMap,
 	"mkSlice":         mkSlice,
 	"escape":          escape,
-	"sqlEscape":	   sqlEscape,
+	"sql":             sqlEscape,
 	"seq":             seq,
 	"url_path":        urlPath, // SEO, Slugify
 	"urlencode":       urlencode,

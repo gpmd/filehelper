@@ -65,7 +65,7 @@ func TestTemplate(t *testing.T) {
 			Result:   `1 2 3 `,
 		},
 		"sqlEscape": testTemplateStruct{
-			Template: `{{sqlEscape .A}}`,
+			Template: `{{sql .A}}`,
 			Values: map[string]interface{}{"A": []string{"name\n", "surna'me", "3"}},
 			Result: `VARCHAR['name\n', 'surna\'me', '3']`,
 		},
