@@ -77,6 +77,7 @@ var fmap = template.FuncMap{
 	"createMap":       createMap,
 	"mkSlice":         mkSlice,
 	"escape":          escape,
+	"sql":             sqlEscape,
 	"seq":             seq,
 	"url_path":        urlPath, // SEO, Slugify
 	"urlencode":       urlencode,
@@ -244,6 +245,11 @@ func item(s, sep string, num int) string {
 
 func escape(str string) string {
 	return strings.Replace(str, "\"", "\\\"", -1)
+}
+
+func sqlEscape(q interface{}) string {
+	value := reflect.ValueOf(q)
+	return sqlEscapeType(value)
 }
 
 func dateFmt(format, datestring string) string {
