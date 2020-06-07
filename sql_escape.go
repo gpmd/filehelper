@@ -1,6 +1,7 @@
 package filehelper
 
 import (
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -10,13 +11,6 @@ import (
 // sqlEscapeType uses Reflect to detect and handle each different type
 // and escape it accordingly
 func sqlEscapeType(value reflect.Value) string {
-	sqlTypes := map[reflect.Kind]string {
-		reflect.String: "VARCHAR",
-		reflect.Int: "BIGINT",
-		reflect.Float32: "FLOAT",
-		reflect.Float64: "FLOAT",
-	}
-
 	var escaped string
 	switch value.Kind() {
 	case reflect.String:
@@ -26,25 +20,19 @@ func sqlEscapeType(value reflect.Value) string {
 		for i := 0; i < value.Len(); i++ {
 			vals = append(vals, sqlEscapeType(value.Index(i)))
 		}
-		elemtype := "ARRAY"
-		if sqlType, ok := sqlTypes[value.Type().Elem().Kind()]; ok {
-			elemtype = sqlType
-		}
-		escaped = fmt.Sprintf("%s[%s]", elemtype, strings.Join(vals, ", "))
+		escaped = strings.Join(vals, ", ")
 	case reflect.Int:
 		escaped = strconv.FormatInt(value.Int(), 10)
 	case reflect.Float32:
 		escaped = strconv.FormatFloat(value.Float(), 'f', -1, 32)
 	case reflect.Float64:
 		escaped = strconv.FormatFloat(value.Float(), 'f', -1, 64)
-	case reflect.Struct:
-		vals := make([]string, 0, value.NumField())
-		for i := 0; i < value.NumField(); i++ {
-			vals = append(vals, sqlEscapeType(value.Field(i)))
-		}
-		escaped = strings.Join(vals, ", ")
 	default:
-		fmt.Println("Unsupported type")
+		b, err := json.Marshal(value.Interface())
+		if err != nil {
+			panic(err)
+		}
+		escaped = sqlEscapeType(reflect.ValueOf(string(b)))
 	}
 	return escaped
 }
@@ -72,9 +60,6 @@ func escapeString(source string) string {
 			break
 		case '\'':
 			escape = '\''
-			break
-		case '"': /* Better safe than sorry */
-			escape = '"'
 			break
 		case '\032': /* This gives problems on Win32 */
 			escape = 'Z'

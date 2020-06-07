@@ -248,8 +248,7 @@ func escape(str string) string {
 }
 
 func sqlEscape(q interface{}) string {
-	value := reflect.ValueOf(q)
-	return sqlEscapeType(value)
+	return sqlEscapeType(reflect.ValueOf(q))
 }
 
 func dateFmt(format, datestring string) string {
